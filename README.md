@@ -13,9 +13,8 @@ Prerequisites
 
 Setup
 -----
-
-1. Start database by running script:
-> src/dist/db/db.sh
+1. On project folder start database by running script:
+> cd src/dist/db/ && ./db.sh
 
 This starts Hsqldb database for the integration. You can connect to database using sql client with username 'sa' without password and this connection string:
 > jdbc:hsqldb:hsql://localhost/ordersDb
