@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.example.org/order"
+    xmlns:tns="http://www.example.org/order" elementFormDefault="qualified">
+    <element name="Order">
+        <annotation>
+            <documentation xml:lang="en">
+                Order model
+            </documentation>
+        </annotation>
+        <complexType>
+            <sequence>
+                <element name="ProductId" type="string" />
+                <element name="Quantity" type="integer" />
+                <element name="CustomerId" type="string" />
+                <element name="CustomerReference" type="string" />
+                <element name="Received" type="dateTime" />
+                <element name="DeliveryTime" type="integer" />
+                <element name="ShippingAddress" type="string" />
+            </sequence>
+        </complexType>
+    </element>
+</schema>

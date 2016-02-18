@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:json="http://www.mulesoft.org/schema/mule/json"
+    xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+    xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata"
+    xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+    xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+    xmlns:spring="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <file:connector name="File" autoDelete="true"
+        streaming="false" validateConnections="true" doc:name="File" />
+    <byte-array-to-string-transformer
+        name="Byte_Array_to_String" doc:name="Byte Array to String" />
+    <http:request-config name="Customer_HTTP_Request_Configuration"
+        host="localhost" port="8081" doc:name="HTTP Request Configuration"
+        basePath="/api">
+        <http:raml-api-configuration
+            location="customers/v1/customers.raml" />
+    </http:request-config>
+    <http:request-config name="Product_HTTP_Request_Configuration"
+        host="localhost" port="8082" doc:name="HTTP Request Configuration"
+        basePath="/api">
+        <http:raml-api-configuration
+            location="products/v1/products.raml" />
+    </http:request-config>
+    <flow name="orders-demo">
+        <file:inbound-endpoint path="target/files/orders/inbox"
+            moveToDirectory="target/files/orders/inbox/processing"
+            connector-ref="File" responseTimeout="10000" doc:name="File"
+            transformer-refs="Byte_Array_to_String" />
+        <logger message="Received orders file" level="INFO" doc:name="Logger"/>
+        <scripting:transformer doc:name="Transform csv to pojos">
+            <scripting:script engine="Groovy"><![CDATA[import com.xlson.groovycsv.CsvParser
+                import javax.xml.datatype.DatatypeFactory
+                
+                def iter = new CsvParser().parse(payload, separator: ';')
+
+                
+                iter.collect { line ->
+                    def order = new org.example.order.Order()
+                    
+                    try {
+                        order.productId = line.productId
+                        order.quantity = line.quantity.toBigInteger()
+                        order.customerId = line.customerId
+                        order.customerReference = line.customerReference
+                        order.received = DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar())
+                    } catch (e) {
+                    	throw new RuntimeException('Could not parse csv!')
+                    }
+                    
+                    order
+                }]]></scripting:script>
+        </scripting:transformer>
+        <logger message="Parsed #[payload.size()] orders" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="orders" value="#[payload]"
+            doc:name="Store orders in a variable" />
+        <flow-ref name="get-product-details" doc:name="get-product-details" />
+        <flow-ref name="get-customer-details" doc:name="get-customer-details" />
+        <set-payload value="#[orders]" doc:name="Use orders as payload" />
+        <flow-ref name="enrich-orders" doc:name="enrich-orders"/>
+        <logger message="Saving orders to database" level="INFO" doc:name="Logger"/>
+        <db:insert config-ref="OrdersDbConnector" doc:name="Save orders to db" bulkMode="true">
+            <db:parameterized-query>
+                <![CDATA[
+                INSERT INTO orders (product_id, quantity, customer_id, delivery_time, shipping_address, customer_reference, received)
+                VALUES (#[payload.productId],#[payload.quantity],#[payload.customerId],#[payload.deliveryTime],#[payload.shippingAddress],#[payload.customerReference],#[new java.sql.Timestamp(payload.received.toGregorianCalendar().getTimeInMillis())]);
+                ]]>
+            </db:parameterized-query>
+        </db:insert>
+        <logger message="Done" level="INFO" doc:name="Logger"/>
+    </flow>
+    <sub-flow name="get-customer-details">
+        <logger message="Querying customer details" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="customers" value="#[[]]"
+            doc:name="Customers list" />
+        <scripting:transformer doc:name="Collect unique customer ids">
+            <scripting:script engine="Groovy"><![CDATA[orders.collect { it.customerId }.unique()]]></scripting:script>
+        </scripting:transformer>
+        <foreach doc:name="For Each" collection="#[payload]">
+            <http:request config-ref="Customer_HTTP_Request_Configuration"
+                path="/customers/{id}" method="GET" doc:name="HTTP">
+                <http:request-builder>
+                    <http:uri-param paramName="id"
+                        value="#[payload]" />
+                </http:request-builder>
+            </http:request>
+            <json:json-to-object-transformer
+                doc:name="JSON to Object" returnClass="java.util.HashMap" />
+            <expression-transformer
+                expression="#[groovy:customers &lt;&lt; payload]"
+                doc:name="Add result to the customer list" />
+        </foreach>
+    </sub-flow>
+    <sub-flow name="get-product-details">
+        <logger message="Querying product details" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="products" value="#[[]]"
+            doc:name="Product list" />
+        <scripting:transformer doc:name="Collect unique product ids">
+            <scripting:script engine="Groovy"><![CDATA[orders.collect { it.productId }.unique()]]></scripting:script>
+        </scripting:transformer>
+        <foreach doc:name="For Each" collection="#[payload]">
+            <http:request config-ref="Product_HTTP_Request_Configuration"
+                path="/products/{id}" method="GET" doc:name="HTTP">
+                <http:request-builder>
+                    <http:uri-param paramName="id"
+                        value="#[payload]" />
+                </http:request-builder>
+            </http:request>
+            <json:json-to-object-transformer
+                doc:name="JSON to Object" returnClass="java.util.HashMap" />
+            <expression-transformer
+                expression="#[groovy:products &lt;&lt; payload]"
+                doc:name="Add result to the product list" />
+        </foreach>
+    </sub-flow>
+    <sub-flow name="enrich-orders">
+        <logger message="Enriching orders" level="INFO" doc:name="Logger"/>
+        <foreach doc:name="For Each" collection="#[orders]">
+            <scripting:transformer
+                doc:name="Map shipping address and delivery time">
+                <scripting:script engine="Groovy"><![CDATA[def customerInfo = customers.find { c -> c.data.id == payload.customerId }
+def productInfo = products.find { p -> p.data.id == payload.productId }
+
+
+payload.shippingAddress = customerInfo?.data.shippingAddress
+payload.deliveryTime = productInfo?.data.deliveryTimeInDays
+                ]]></scripting:script>
+            </scripting:transformer>
+        </foreach>
+    </sub-flow>
+</mule>

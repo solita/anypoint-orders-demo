@@ -1,0 +1,23 @@
+#%RAML 0.8
+---
+title: Products API
+version: 1
+
+/products:
+    /{id}:
+      get:
+         description: Retrieve product information
+         responses:
+           200:
+             body:
+               application/json:
+                example: |
+                   {
+                     "data": {
+                       "id": "1",
+                       "name": "foo",
+                       "deliveryTimeInDays": 5
+                     },
+                     "success": true,
+                     "status": 200
+                   }

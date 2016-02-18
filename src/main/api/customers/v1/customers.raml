@@ -1,0 +1,23 @@
+#%RAML 0.8
+---
+title: Customers API
+version: 1
+
+/customers:
+    /{id}:
+      get:
+         description: Retrieve customer information
+         responses:
+           200:
+             body:
+               application/json:
+                example: |
+                   {
+                     "data": {
+                       "id": "1",
+                       "name": "foo",
+                       "shippingAdress": "Random Street"
+                     },
+                     "success": true,
+                     "status": 200
+                   }
