@@ -21,7 +21,7 @@ This starts Hsqldb database for the integration. You can connect to database usi
 
 2. Import the project to Mulesoft Anypoint Studio
 
-3. Run the project (green and white play-button on toolbar
+3. Run the project (green and white play-button on toolbar)
 
 4. copy sample data:
 > **from** src/test/resources/sample_data/orders_sample.csv **to** target/files/orders/inbox
