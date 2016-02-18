@@ -17,7 +17,7 @@ Thumbs.db
 
 # Studio folders 
 target/**
-#catalog/**
+catalog/**
 
 # Other files
 .classpath
