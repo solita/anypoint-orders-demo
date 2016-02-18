@@ -15,8 +15,9 @@ Thumbs.db
 *.jar
 *.zip
 
-# Eclipse target folder
+# Studio folders 
 target/**
+#catalog/**
 
 # Other files
 .classpath
