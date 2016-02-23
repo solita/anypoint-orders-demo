@@ -7,23 +7,22 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
-    
-    <spring:bean id="ordersDbDataSource"
-        class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-        <spring:property name="url" value="jdbc:hsqldb:hsql://localhost/ordersDb" />
-        <spring:property name="driverClassName" value="org.hsqldb.jdbc.JDBCDriver" />
-        <spring:property name="username" value="sa" />
-        <spring:property name="validationQuery" value="SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS" />
-    </spring:bean>
+    <spring:beans>
+        <spring:bean id="ordersDbDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+            <spring:property name="url" value="jdbc:hsqldb:hsql://localhost/ordersDb"/>
+            <spring:property name="driverClassName" value="org.hsqldb.jdbc.JDBCDriver"/>
+            <spring:property name="username" value="sa"/>
+            <spring:property name="validationQuery" value="SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS"/>
+        </spring:bean>
+        <spring:bean id="flywayMigration" class="org.flywaydb.core.Flyway" init-method="migrate">
+            <spring:property name="baselineOnMigrate" value="true"/>
+            <spring:property name="dataSource" ref="ordersDbDataSource"/>
+            <spring:property name="locations" value="db"/>
+            <spring:property name="validateOnMigrate" value="false"/>
+        </spring:bean>
+    </spring:beans>
 
     <db:generic-config name="OrdersDbConnector"
-        dataSource-ref="ordersDbDataSource" />
- 
-    <spring:bean id="flywayMigration" class="org.flywaydb.core.Flyway" init-method="migrate">
-        <spring:property name="baselineOnMigrate" value="true" />
-        <spring:property name="dataSource" ref="ordersDbDataSource" />
-        <spring:property name="locations" value="db" />
-        <spring:property name="validateOnMigrate" value="false" />
-    </spring:bean>
+        dataSource-ref="ordersDbDataSource" doc:name="Generic Database Configuration"/>
 
 </mule>

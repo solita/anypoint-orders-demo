@@ -31,6 +31,20 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
         <http:raml-api-configuration
             location="products/v1/products.raml" />
     </http:request-config>
+    <sub-flow name="process-orders">
+        <logger message="Parsed #[payload.size()] orders" level="INFO" doc:name="Logger"/>
+        <set-variable variableName="orders" value="#[payload]" doc:name="Store orders in a variable"/>
+        <flow-ref name="get-product-details" doc:name="get-product-details"/>
+        <flow-ref name="get-customer-details" doc:name="get-customer-details"/>
+        <set-payload value="#[orders]" doc:name="Use orders as payload"/>
+        <flow-ref name="enrich-orders" doc:name="enrich-orders"/>
+        <logger message="Saving orders to database" level="INFO" doc:name="Logger"/>
+        <db:insert config-ref="OrdersDbConnector" bulkMode="true" doc:name="Save orders to db">
+            <db:parameterized-query><![CDATA[INSERT INTO orders (product_id, quantity, customer_id, delivery_time, shipping_address, customer_reference, received)
+                VALUES (#[payload.productId],#[payload.quantity],#[payload.customerId],#[payload.deliveryTime],#[payload.shippingAddress],#[payload.customerReference],#[new java.sql.Timestamp(payload.received.toGregorianCalendar().getTimeInMillis())]);]]></db:parameterized-query>
+        </db:insert>
+        <logger message="Done" level="INFO" doc:name="Logger"/>
+    </sub-flow>
     <flow name="orders-demo">
         <file:inbound-endpoint path="target/files/orders/inbox"
             moveToDirectory="target/files/orders/inbox/processing"
@@ -60,23 +74,7 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
                     order
                 }]]></scripting:script>
         </scripting:transformer>
-        <logger message="Parsed #[payload.size()] orders" level="INFO" doc:name="Logger"/>
-        <set-variable variableName="orders" value="#[payload]"
-            doc:name="Store orders in a variable" />
-        <flow-ref name="get-product-details" doc:name="get-product-details" />
-        <flow-ref name="get-customer-details" doc:name="get-customer-details" />
-        <set-payload value="#[orders]" doc:name="Use orders as payload" />
-        <flow-ref name="enrich-orders" doc:name="enrich-orders"/>
-        <logger message="Saving orders to database" level="INFO" doc:name="Logger"/>
-        <db:insert config-ref="OrdersDbConnector" doc:name="Save orders to db" bulkMode="true">
-            <db:parameterized-query>
-                <![CDATA[
-                INSERT INTO orders (product_id, quantity, customer_id, delivery_time, shipping_address, customer_reference, received)
-                VALUES (#[payload.productId],#[payload.quantity],#[payload.customerId],#[payload.deliveryTime],#[payload.shippingAddress],#[payload.customerReference],#[new java.sql.Timestamp(payload.received.toGregorianCalendar().getTimeInMillis())]);
-                ]]>
-            </db:parameterized-query>
-        </db:insert>
-        <logger message="Done" level="INFO" doc:name="Logger"/>
+        <flow-ref name="process-orders" doc:name="Flow Reference"/>
     </flow>
     <sub-flow name="get-customer-details">
         <logger message="Querying customer details" level="INFO" doc:name="Logger"/>

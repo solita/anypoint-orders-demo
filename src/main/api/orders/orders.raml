@@ -1,0 +1,26 @@
+#%RAML 0.8
+---
+title: Orders API
+version: 1
+
+/orders: 
+  displayName: Orders
+  post: 
+    description: Post new orders
+    body: 
+      application/json: 
+        schema: !include post-orders-schema.json
+        example: !include post-orders-example.json
+    responses: 
+      200: 
+        body:
+          application/json: 
+            schema: !include simple-response-schema.json
+            example: |
+              { "status" : "OK", "message" : "Orders posted successfully" }
+      400: 
+       body:
+          application/json: 
+            schema: !include simple-response-schema.json
+            example: |
+              { "message" : "Bad request" }

@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "description": "Orders API Common Simple Response Schema",
+  "type": "object",
+  "properties": {
+    "message": {
+      "required": false,
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

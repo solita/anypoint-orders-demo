@@ -1,0 +1,16 @@
+{
+	"orders":[
+	{
+		"customerId": 121212,
+		"customerReference": "123",
+		"productId": "A55",
+		"quantity": 1
+	},
+	{
+		"customerId": 121212,
+		"customerReference": "223",
+		"productId": "A56",
+		"quantity": 2
+	}
+	]
+}

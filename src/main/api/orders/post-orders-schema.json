@@ -1,0 +1,32 @@
+{
+"$schema": "http://json-schema.org/draft-03/schema#",
+"description": "Post orders schema",
+"type" : "object",
+    "properties": {
+        "orders": {
+    	   "type": "array",
+    		"items": {
+                "type": "object",
+                "properties": {
+                    "customerId": {
+                        "required": true,
+                        "type": "integer"
+                    },
+                    "customerReference": {
+                        "required": true,
+                        "type": "string"
+                    },
+                    "productId": {
+                        "required": true,
+                        "type": "string"
+                    },
+                    "quantity": {
+                        "required": true,
+                        "type": "integer"
+                    }
+        	   },"additionalProperties": false
+    	   }
+        }
+    
+    }, "additionalProperties": false
+}
