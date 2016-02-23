@@ -135,4 +135,34 @@ payload.deliveryTime = productInfo?.data.deliveryTimeInDays
             </scripting:transformer>
         </foreach>
     </sub-flow>
+    <sub-flow name="get-orders">
+        <logger message="#[message.inboundProperties.'http.uri.params'.id]" level="INFO" doc:name="Logger"/>
+        <db:select config-ref="OrdersDbConnector" doc:name="Database">
+            <db:parameterized-query><![CDATA[SELECT * 
+FROM orders
+WHERE CUSTOMER_ID = #[id]]]></db:parameterized-query>
+        </db:select>
+        <logger message="#[message]" level="INFO" doc:name="Logger"/>
+        <scripting:transformer returnClass="java.util.HashMap" doc:name="Groovy">
+            <scripting:script engine="Groovy"><![CDATA[def response = new HashMap()
+response.put("customerId", id)
+
+def orders = new ArrayList()
+payload.each{ orderRow ->
+	def order = new HashMap()
+	order.put("customerReference", orderRow.CUSTOMER_REFERENCE)
+	order.put("productId", orderRow.PRODUCT_ID)
+	order.put("quantity", orderRow.QUANTITY)
+	order.put("shippingAddress", orderRow.SHIPPING_ADDRESS)
+	order.put("orderedDate", orderRow.RECEIVED.toString())
+	
+	orders.add(order)
+}
+response.put("orders", orders)
+
+response]]></scripting:script>
+        </scripting:transformer>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </sub-flow>
 </mule>

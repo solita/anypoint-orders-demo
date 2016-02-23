@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
 http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
 http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
 http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
-    <http:listener-config name="orders-httpListenerConfig" host="0.0.0.0" port="8083" doc:name="HTTP Listener Configuration"/>
-    <apikit:config name="orders-config" raml="orders/orders.raml" consoleEnabled="true" consolePath="console" doc:name="Router"/>
+    <http:listener-config name="orders-httpListenerConfig" host="0.0.0.0" port="8083" doc:name="HTTP Listener Configuration" />
+    <apikit:config name="orders-config" raml="orders/orders.raml" consoleEnabled="true" consolePath="console" doc:name="Router" />
     <flow name="orders-main">
-        <http:listener config-ref="orders-httpListenerConfig" path="/api/*" doc:name="HTTP"/>
-        <apikit:router config-ref="orders-config" doc:name="APIkit Router"/>
-        <exception-strategy ref="orders-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy"/>
+        <http:listener config-ref="orders-httpListenerConfig" path="/api/*" doc:name="HTTP" />
+        <apikit:router config-ref="orders-config" doc:name="APIkit Router" />
+        <exception-strategy ref="orders-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy" />
     </flow>
     <flow name="post:/orders:application/json:orders-config">
-        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
-        <json:json-to-object-transformer doc:name="JSON to Object" returnClass="java.util.HashMap"/>
-        <scripting:transformer  doc:name="Transform request to order POJO">
+        <logger message="#[payload]" level="INFO" doc:name="Logger" />
+        <json:json-to-object-transformer doc:name="JSON to Object" returnClass="java.util.HashMap" />
+        <scripting:transformer doc:name="Transform request to order POJO">
             <scripting:script engine="Groovy"><![CDATA[import javax.xml.datatype.DatatypeFactory
 payload.orders.collect { orderSource ->
 	def order = new org.example.order.Order()
@@ -28,38 +28,40 @@ payload.orders.collect { orderSource ->
 	
 	order
 	
-}
-            ]]></scripting:script>
+}]]></scripting:script>
         </scripting:transformer>
-        <logger message="#[payload[0].productId.toString()]" level="INFO" doc:name="Logger"/>
-        <flow-ref name="process-orders" doc:name="process-orders"/>
-        <set-payload value="{ &quot;status&quot; : &quot;OK&quot;, &quot;message&quot; : &quot;Orders posted successfully&quot; }" doc:name="Set Payload"/>
+        <logger message="#[payload[0].productId.toString()]" level="INFO" doc:name="Logger" />
+        <flow-ref name="process-orders" doc:name="process-orders" />
+        <set-payload value="{ &quot;status&quot; : &quot;OK&quot;, &quot;message&quot; : &quot;Orders posted successfully&quot; }" doc:name="Set Payload" />
     </flow>
     <apikit:mapping-exception-strategy name="orders-apiKitGlobalExceptionMapping">
         <apikit:mapping statusCode="404">
             <apikit:exception value="org.mule.module.apikit.exception.NotFoundException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Resource not found&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
         <apikit:mapping statusCode="405">
             <apikit:exception value="org.mule.module.apikit.exception.MethodNotAllowedException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Method not allowed&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
         <apikit:mapping statusCode="415">
             <apikit:exception value="org.mule.module.apikit.exception.UnsupportedMediaTypeException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Unsupported media type&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
         <apikit:mapping statusCode="406">
             <apikit:exception value="org.mule.module.apikit.exception.NotAcceptableException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Not acceptable&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
         <apikit:mapping statusCode="400">
             <apikit:exception value="org.mule.module.apikit.exception.BadRequestException" />
-            <set-property propertyName="Content-Type" value="application/json" doc:name="Property"/>
-            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload"/>
+            <set-property propertyName="Content-Type" value="application/json" doc:name="Property" />
+            <set-payload value="{ &quot;message&quot;: &quot;Bad request&quot; }" doc:name="Set Payload" />
         </apikit:mapping>
     </apikit:mapping-exception-strategy>
+    <flow name="get:/orders/{id}:orders-config">
+        <flow-ref name="get-orders" doc:name="get-orders"/>
+    </flow>
 </mule>
