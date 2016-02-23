@@ -1,0 +1,19 @@
+{
+	"customerId": "121212",
+	"orders": [
+	{
+		"customerReference": "123",
+		"productId": "A55",
+		"quantity": 1,
+		"shippingAddress" : "Kujatie 3",
+		"orderedDate" : "2016-02-08"
+	},
+	{
+		"customerReference": "223",
+		"productId": "A56",
+		"quantity": 2,
+		"shippingAddress" : "Kujatie 3",
+		"orderedDate" : "2016-02-08"
+	}
+	]
+}
