@@ -13,17 +13,19 @@ Prerequisites
 
 Setup
 -----
-1. On project folder start database by running script:
+1. Set maven configuration in Anypoint Studio preferences: Preferences -> Anypoint Studio -> Maven
+
+2. On project folder start database by running script:
 > cd src/dist/db/ && ./db.sh
 
 This starts Hsqldb database for the integration. You can connect to database using sql client with username 'sa' without password and this connection string:
 > jdbc:hsqldb:hsql://localhost/ordersDb
 
-2. Import the project to Mulesoft Anypoint Studio
+3. Import the project to Mulesoft Anypoint Studio
 
-3. Run the project (green and white play-button on toolbar)
+4. Run the project (green and white play-button on toolbar)
 
-4. copy sample data:
+5. copy sample data:
 > **from** src/test/resources/sample_data/orders_sample.csv **to** target/files/orders/inbox
 
-5. See console output in Anypoint Studio
+6. See console output in Anypoint Studio
