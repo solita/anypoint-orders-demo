@@ -2,6 +2,8 @@ Solita Anypoint demo
 ====================
 This demo consists of an order integration that reads csv files and stores orders to a database. Order information is enriched from two separate REST services.
 
+Check [presentation](src/dist/presentation/Solita_Mule-API-Demo_07032016.pdf) for more details.
+
 To run this demo
 ================
 
